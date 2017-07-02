@@ -41,12 +41,12 @@ end
 
 -- {{{ Variable definitions
 -- Themes define colours, icons, font and wallpapers.
-beautiful.init("~/.config/awesome/theme/theme.lua")
+local theme = beautiful.init("~/.config/awesome/theme/theme.lua")
 
 -- This is used later as the default terminal and editor to run.
-terminal = "x-terminal-emulator"
+terminal = "lxterminal"
 editor = "emacs"
-editor_cmd = terminal .. " -e " .. editor
+editor_cmd = editor
 
 -- Default modkey.
 -- Usually, Mod4 is the key with a logo between Control and Alt.
@@ -179,6 +179,62 @@ end
 -- Re-set wallpaper when a screen's geometry changes (e.g. different resolution)
 screen.connect_signal("property::geometry", set_wallpaper)
 
+-- widgets
+local lain = require("lain")
+
+local volicon = wibox.widget.imagebox(beautiful.volmuted)
+local volume = lain.widget.alsabar({
+    --togglechannel = "IEC958,3",
+    --notification_preset = { font = "Monospace 12", fg = "#ffffff" },
+    settings = function()
+        local index, perc = "", tonumber(volume_now.level) or 0
+
+        if volume_now.status == "off" then
+            index = "volmutedblocked"
+        else
+            if perc <= 5 then
+                index = "volmuted"
+            elseif perc <= 25 then
+                index = "vollow"
+            elseif perc <= 75 then
+                index = "volmed"
+            else
+                index = "volhigh"
+            end
+        end
+
+        volicon:set_image(theme[index])
+    end
+})
+
+volicon:buttons(awful.util.table.join (
+          awful.button({}, 1, function()
+            awful.spawn.with_shell(string.format("%s -e alsamixer", terminal))
+          end),
+          awful.button({}, 2, function()
+            awful.spawn(string.format("%s set %s 100%%", volume.cmd, volume.channel))
+            volume.notify()
+          end),
+          awful.button({}, 3, function()
+            awful.spawn(string.format("%s set %s toggle", volume.cmd, volume.togglechannel or volume.channel))
+            volume.notify()
+          end),
+          awful.button({}, 4, function()
+            awful.spawn(string.format("%s set %s 1%%+", volume.cmd, volume.channel))
+            volume.notify()
+          end),
+          awful.button({}, 5, function()
+            awful.spawn(string.format("%s set %s 1%%-", volume.cmd, volume.channel))
+            volume.notify()
+          end)
+))
+
+local cpu = lain.widget.cpu {
+    settings = function()
+        widget:set_markup("Cpu " .. cpu_now.usage)
+    end
+}
+
 awful.screen.connect_for_each_screen(function(s)
     -- Wallpaper
     set_wallpaper(s)
@@ -207,20 +263,22 @@ awful.screen.connect_for_each_screen(function(s)
 
     -- Add widgets to the wibox
     s.mywibox:setup {
-        layout = wibox.layout.align.horizontal,
-        { -- Left widgets
-            layout = wibox.layout.fixed.horizontal,
-            mylauncher,
-            s.mytaglist,
-            s.mypromptbox,
-        },
-        s.mytasklist, -- Middle widget
-        { -- Right widgets
-            layout = wibox.layout.fixed.horizontal,
-            mykeyboardlayout,
-            wibox.widget.systray(),
-            mytextclock,
-            s.mylayoutbox,
+       layout = wibox.layout.align.horizontal,
+       { -- Left widgets
+          layout = wibox.layout.fixed.horizontal,
+          mylauncher,
+          s.mytaglist,
+          s.mypromptbox,
+       },
+       s.mytasklist, -- Middle widget
+       { -- Right widgets
+          layout = wibox.layout.fixed.horizontal,
+          mykeyboardlayout,
+          volicon,
+          cpu,
+          wibox.widget.systray(),
+          mytextclock,
+          s.mylayoutbox,
         },
     }
 end)

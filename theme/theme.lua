@@ -18,7 +18,7 @@ theme.fg_urgent     = "#ffffff"
 theme.fg_minimize   = "#ffffff"
 
 theme.useless_gap   = 0
-theme.border_width  = 0
+theme.border_width  = 1
 theme.border_normal = "#000000"
 theme.border_focus  = "#535d6c"
 theme.border_marked = "#91231c"
@@ -77,7 +77,7 @@ theme.titlebar_maximized_button_focus_inactive  = "~/.config/awesome/theme/title
 theme.titlebar_maximized_button_normal_active = "~/.config/awesome/theme/titlebar/maximized_normal_active.png"
 theme.titlebar_maximized_button_focus_active  = "~/.config/awesome/theme/titlebar/maximized_focus_active.png"
 
---theme.wallpaper = "~/.config/awesome/theme/background.png"
+theme.wallpaper = "~/Downloads/idbwtqzu00ux.jpg"
 
 -- You can use your own layout icons like this:
 theme.layout_fairh = "~/.config/awesome/theme/layouts/fairhw.png"
@@ -102,6 +102,15 @@ theme.awesome_icon = "~/.config/awesome/theme/icons/awesome16.png"
 -- Define the icon theme for application icons. If not set then the icons
 -- from /usr/share/icons and /usr/share/icons/hicolor will be used.
 theme.icon_theme = nil
+
+theme.root = "~/.config/awesome/theme"
+
+theme.volhigh = theme.root .. "/icons/volume-high.png"
+theme.vollow = theme.root .. "/icons/volume-low.png"
+theme.volmed = theme.root .. "/icons/volume-medium.png"
+theme.volmutedblocked = theme.root .. "/icons/volume-muted-blocked.png"
+theme.volmuted = theme.root .. "/icons/volume-muted.png"
+theme.voloff = theme.root .. "/icons/volume-off.png"
 
 return theme
 
