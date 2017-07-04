@@ -10,6 +10,7 @@ local beautiful = require("beautiful")
 local naughty = require("naughty")
 local menubar = require("menubar")
 local hotkeys_popup = require("awful.hotkeys_popup").widget
+local lain = require("lain")
 
 -- Load Debian menu entries
 require("debian.menu")
@@ -120,6 +121,16 @@ mykeyboardlayout = awful.widget.keyboardlayout()
 -- {{{ Wibar
 -- Create a textclock widget
 mytextclock = wibox.widget.textclock()
+mytextclock.font = beautiful.font
+lain.widget.calendar({
+      attach_to = { mytextclock },
+      notification_preset = {
+         fg = "#FFFFFF",
+         bg = "#000000",
+         position = "top_right",
+         font = beautiful.font
+      }
+})
 
 -- Create a wibox for each screen and add it
 local taglist_buttons = awful.util.table.join(
@@ -165,22 +176,22 @@ local tasklist_buttons = awful.util.table.join(
                                           end))
 
 local function set_wallpaper(s)
-    -- Wallpaper
-    if beautiful.wallpaper then
-        local wallpaper = beautiful.wallpaper
-        -- If wallpaper is a function, call it with the screen
-        if type(wallpaper) == "function" then
-            wallpaper = wallpaper(s)
-        end
-        gears.wallpaper.maximized(wallpaper, s, true)
-    end
+   os.execute("xsetroot -solid '#000000'")
+   -- Wallpaper
+   -- if beautiful.wallpaper then
+   --    local wallpaper = beautiful.wallpaper
+   --    -- If wallpaper is a function, call it with the screen
+   --    if type(wallpaper) == "function" then
+   --    wallpaper = wallpaper(s)
+   --    end
+   --    gears.wallpaper.maximized(wallpaper, s, true)
+   -- end
 end
 
 -- Re-set wallpaper when a screen's geometry changes (e.g. different resolution)
 screen.connect_signal("property::geometry", set_wallpaper)
 
 -- widgets
-local lain = require("lain")
 
 local volicon = wibox.widget.imagebox(beautiful.volmuted)
 local volume = lain.widget.alsabar({
@@ -209,7 +220,8 @@ local volume = lain.widget.alsabar({
 
 volicon:buttons(awful.util.table.join (
           awful.button({}, 1, function()
-            awful.spawn.with_shell(string.format("%s -e alsamixer", terminal))
+                --awful.spawn.with_shell(string.format("%s -e alsamixer", terminal))
+                awful.spawn("pavucontrol")
           end),
           awful.button({}, 2, function()
             awful.spawn(string.format("%s set %s 100%%", volume.cmd, volume.channel))
@@ -229,18 +241,75 @@ volicon:buttons(awful.util.table.join (
           end)
 ))
 
-local cpu = lain.widget.cpu {
-    settings = function()
-        widget:set_markup("Cpu " .. cpu_now.usage)
-    end
+local cpu_graph = wibox.widget {
+   min_value = 0,
+   max_value = 100,
+   border_color = '#222222',
+   background_color = '#222222',
+   color = "#3388ff",
+   widget = wibox.widget.graph
 }
 
+local cpu_graph_mirror = wibox.container.mirror(cpu_graph, {horizontal = true})
+
+local cpu = lain.widget.cpu {
+   settings = function()
+      widget:set_markup(" <span color='#3388ff'>cpu " .. cpu_now.usage .. "% </span>")
+      cpu_graph:add_value(cpu_now.usage)
+   end
+}
+
+local weather = lain.widget.weather({
+      city_id = 756135, -- warsaw
+      notification_preset = { font = beautiful.font },
+      settings = function()
+         units = math.floor(weather_now["main"]["temp"])
+         widget:set_markup("<span color='#ff5511'> " .. lain.util.markup.font(beautiful.font, units .. "°C") .. " </span>")
+      end
+})
+
+local weather_caption = wibox.widget {
+   markup = "<span color='#ff5511'> warsaw: </span>",
+   align  = 'center',
+   valign = 'center',
+   widget = wibox.widget.textbox
+}
+
+local helpers = require("lain.helpers")
+
+local multimon = wibox.widget {
+   markup = 'This <i>is</i> a <b>textbox</b>!!!',
+   align  = 'center',
+   valign = 'center',
+   widget = wibox.widget.textbox
+}
+
+function print_monitors(lines)
+   local str = ' monitors: '
+   for i in string.gmatch(lines, "%S+") do
+      str = str .. i .. ' | '
+   end
+   return str .. ' '
+end
+
+helpers.async({ awful.util.shell, "-c",
+                "xrandr | grep \" connected\" | sed -e \"s/\\([a-zA-Z0-9]\\+\\) connected.*/\\1/\""
+                --"ls"
+              }, function(s)
+      multimon.markup = print_monitors(s)
+
+      naughty.notify({ preset = naughty.config.presets.critical,
+                       title = print_monitors(s),
+                       text = awesome.startup_errors })
+end)
+
+
 awful.screen.connect_for_each_screen(function(s)
-    -- Wallpaper
-    set_wallpaper(s)
+      -- Wallpaper
+      set_wallpaper(s)
 
     -- Each screen has its own tag table.
-    awful.tag({ "1", "2", "3", "4", "5", "6", "7", "8", "9" }, s, awful.layout.layouts[1])
+    awful.tag({ "general", "code", "music", "games", "aux 1", "aux 2", "aux 3" }, s, awful.layout.layouts[1])
 
     -- Create a promptbox for each screen
     s.mypromptbox = awful.widget.prompt()
@@ -273,9 +342,14 @@ awful.screen.connect_for_each_screen(function(s)
        s.mytasklist, -- Middle widget
        { -- Right widgets
           layout = wibox.layout.fixed.horizontal,
+          weather_caption,
+          weather.icon,
+          weather.widget,
           mykeyboardlayout,
           volicon,
           cpu,
+          cpu_graph_mirror,
+          multimon,
           wibox.widget.systray(),
           mytextclock,
           s.mylayoutbox,

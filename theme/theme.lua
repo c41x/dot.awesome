@@ -4,11 +4,11 @@
 
 local theme = {}
 
-theme.font          = "sans 8"
+theme.font          = "Liberation Mono 8"
 
 theme.bg_normal     = "#222222"
-theme.bg_focus      = "#535d6c"
-theme.bg_urgent     = "#ff0000"
+theme.bg_focus      = "#225599"
+theme.bg_urgent     = "#ff3300"
 theme.bg_minimize   = "#444444"
 theme.bg_systray    = theme.bg_normal
 
@@ -19,9 +19,9 @@ theme.fg_minimize   = "#ffffff"
 
 theme.useless_gap   = 0
 theme.border_width  = 1
-theme.border_normal = "#000000"
-theme.border_focus  = "#535d6c"
-theme.border_marked = "#91231c"
+theme.border_normal = "#222222"
+theme.border_focus  = "#225599"
+theme.border_marked = "#225599"
 
 -- There are other variable sets
 -- overriding the default one when
