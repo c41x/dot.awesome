@@ -259,6 +259,17 @@ local cpu = lain.widget.cpu {
    end
 }
 
+local mem_graph = wibox.widget {
+   min_value = 0,
+   max_value = 100,
+   border_color = '#222222',
+   background_color = '#222222',
+   color = "#88ff33",
+   widget = wibox.widget.graph
+}
+
+local mem_graph_mirror = wibox.container.mirror(cpu_graph, {horizontal = true})
+
 local weather = lain.widget.weather({
       city_id = 756135, -- warsaw
       notification_preset = { font = beautiful.font },
@@ -268,12 +279,24 @@ local weather = lain.widget.weather({
       end
 })
 
+weather.icon:buttons(awful.util.table.join (
+                        awful.button({}, 1, function()
+                              os.execute("xdg-open \"http://www.meteo.pl/php/meteorogram_list_coamps.php?ntype=2n&row=133&col=96&lang=pl&cname=Warszawa\"")
+                        end)
+))
+
 local weather_caption = wibox.widget {
    markup = "<span color='#ff5511'> warsaw: </span>",
    align  = 'center',
    valign = 'center',
    widget = wibox.widget.textbox
 }
+
+local temp = lain.widget.temp({
+      settings = function()
+         widget:set_markup('<span color="#88ff33"> cpu: ' .. coretemp_now .. '°C </span>')
+      end
+})
 
 local helpers = require("lain.helpers")
 
@@ -342,6 +365,7 @@ awful.screen.connect_for_each_screen(function(s)
        s.mytasklist, -- Middle widget
        { -- Right widgets
           layout = wibox.layout.fixed.horizontal,
+          temp,
           weather_caption,
           weather.icon,
           weather.widget,
