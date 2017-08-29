@@ -12,6 +12,8 @@ local menubar = require("menubar")
 local hotkeys_popup = require("awful.hotkeys_popup").widget
 local lain = require("lain")
 
+-- TODO: xdg-mime default pcmanfm.desktop inode/directory
+
 -- Load Debian menu entries
 require("debian.menu")
 
@@ -286,15 +288,26 @@ weather.icon:buttons(awful.util.table.join (
 ))
 
 local weather_caption = wibox.widget {
-   markup = "<span color='#ff5511'> warsaw: </span>",
+   markup = "",
    align  = 'center',
    valign = 'center',
    widget = wibox.widget.textbox
 }
 
+-- to find temperature file use find /sys/devices/ -name "*temp*"
 local temp = lain.widget.temp({
+      timeout = 10,
+      tempfile = "/sys/devices/pci0000:00/0000:00:18.3/hwmon/hwmon1/temp1_input",
       settings = function()
          widget:set_markup('<span color="#88ff33"> cpu: ' .. coretemp_now .. '°C </span>')
+      end
+})
+
+local tempGPU = lain.widget.temp({
+      timeout = 10,
+      tempfile = "/sys/devices/pci0000:00/0000:00:02.0/0000:01:00.0/hwmon/hwmon0/temp1_input",
+      settings = function()
+         widget:set_markup('<span color="#ff8833"> gpu: ' .. coretemp_now .. '°C </span>')
       end
 })
 
@@ -376,6 +389,7 @@ awful.screen.connect_for_each_screen(function(s)
          s.mytasklist, -- Middle widget
          { -- Right widgets
             layout = wibox.layout.fixed.horizontal,
+            tempGPU,
             temp,
             weather_caption,
             weather.icon,
@@ -500,8 +514,24 @@ globalkeys = awful.util.table.join(
     -- Menubar
     awful.key({ modkey }, "p", function() menubar.show() end,
        {description = "show the menubar", group = "launcher"}),
+
     -- deadbeef quake
-    awful.key({ modkey, }, "\\", function () awful.screen.focused().quake_deadbeef:toggle() end)
+    awful.key({ modkey, }, "\\", function () awful.screen.focused().quake_deadbeef:toggle() end),
+
+    -- coamps
+    awful.key({ modkey, }, "[", function ()
+          os.execute("curl \"http://www.meteo.pl/metco/mgram_pict.php?ntype=2n&row=133&col=96&lang=pl\" > /tmp/awesome-wm-weather-c1.png")
+          naughty.notify({ title = "Coamps",
+                           icon = "/tmp/awesome-wm-weather-c1.png",
+                           timeout = 0 })
+    end),
+
+    awful.key({ modkey, }, "]", function ()
+          os.execute("curl \"http://www.meteo.pl/um/metco/mgram_pict.php?ntype=0u&row=406&col=250&lang=pl\" > /tmp/awesome-wm-weather-c2.png")
+          naughty.notify({ title = "UM",
+                           icon = "/tmp/awesome-wm-weather-c2.png",
+                           timeout = 0 })
+    end)
 )
 
 clientkeys = awful.util.table.join(
