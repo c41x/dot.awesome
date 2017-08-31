@@ -12,7 +12,8 @@ local menubar = require("menubar")
 local hotkeys_popup = require("awful.hotkeys_popup").widget
 local lain = require("lain")
 
--- TODO: xdg-mime default pcmanfm.desktop inode/directory
+-- set pcmanfm file manager as default
+os.execute("xdg-mime default pcmanfm.desktop inode/directory")
 
 -- Load Debian menu entries
 require("debian.menu")
@@ -294,10 +295,29 @@ local weather_caption = wibox.widget {
    widget = wibox.widget.textbox
 }
 
+-- detect temperature monitors
+function get_monitor(name)
+   local path = ""
+
+   -- search in hwmon's for id and return corresponding temperature file
+   for i = 0, 10 do
+      local f = io.open("/sys/class/hwmon/hwmon" .. i .. "/name")
+      if f then
+         local fname = f:read("*all")
+         f:close()
+         if string.gsub(fname, "\n", "") == name then
+            return "/sys/class/hwmon/hwmon" .. i .. "/temp1_input"
+         end
+      end
+   end
+
+   return ""
+end
+
 -- to find temperature file use find /sys/devices/ -name "*temp*"
 local temp = lain.widget.temp({
       timeout = 10,
-      tempfile = "/sys/devices/pci0000:00/0000:00:18.3/hwmon/hwmon1/temp1_input",
+      tempfile = get_monitor("k10temp"),
       settings = function()
          widget:set_markup('<span color="#88ff33"> cpu: ' .. coretemp_now .. '°C </span>')
       end
@@ -305,7 +325,7 @@ local temp = lain.widget.temp({
 
 local tempGPU = lain.widget.temp({
       timeout = 10,
-      tempfile = "/sys/devices/pci0000:00/0000:00:02.0/0000:01:00.0/hwmon/hwmon0/temp1_input",
+      tempfile = get_monitor("amdgpu"),
       settings = function()
          widget:set_markup('<span color="#ff8833"> gpu: ' .. coretemp_now .. '°C </span>')
       end
@@ -327,6 +347,9 @@ function print_monitors(lines)
    end
    return str .. ' '
 end
+
+-- monitors setup:
+-- detect monitors and print eg.: <monitor1-id-on-off> <swap> <monitor2-id-on-off>
 
 helpers.async({ awful.util.shell, "-c",
                 "xrandr | grep \" connected\" | sed -e \"s/\\([a-zA-Z0-9]\\+\\) connected.*/\\1/\""
