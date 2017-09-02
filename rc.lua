@@ -118,9 +118,6 @@ mylauncher = awful.widget.launcher({ image = beautiful.awesome_icon,
 menubar.utils.terminal = terminal -- Set the terminal for applications that require it
 -- }}}
 
--- Keyboard map indicator and switcher
-mykeyboardlayout = awful.widget.keyboardlayout()
-
 -- {{{ Wibar
 -- Create a textclock widget
 mytextclock = wibox.widget.textclock()
@@ -334,34 +331,70 @@ local tempGPU = lain.widget.temp({
 local helpers = require("lain.helpers")
 
 local multimon = wibox.widget {
-   markup = 'This <i>is</i> a <b>textbox</b>!!!',
+   markup = 'loading...',
    align  = 'center',
    valign = 'center',
    widget = wibox.widget.textbox
 }
 
-function print_monitors(lines)
-   local str = ' monitors: '
-   for i in string.gmatch(lines, "%S+") do
-      str = str .. i .. ' | '
+multimon:connect_signal("button::press", function(w)
+                           multimon.markup = "asd"
+                           return true
+end)
+
+function cmp_monitors(a, b)
+   return a[2] < b[2]
+end
+
+function split(inputstr, sep)
+   if sep == nil then
+      sep = "%s"
    end
-   return str .. ' '
+   local t={} ; i=1
+   for str in string.gmatch(inputstr, "([^"..sep.."]+)") do
+      t[i] = str
+      i = i + 1
+   end
+   return t
+end
+
+function print_monitors(lines)
+   -- build monitors list
+   local monitors = {}
+   for i in string.gmatch(lines, "%S+") do
+      table.insert(monitors, split(i, ":"))
+   end
+
+   -- sort monitors from left to right
+   table.sort(monitors, cmp_monitors)
+
+   local ret = ""
+   for i, m in ipairs(monitors) do
+      ret = ret .. m[1] .. " at: " .. m[2] .. " | "
+   end
+
+   return ret
 end
 
 -- monitors setup:
 -- detect monitors and print eg.: <monitor1-id-on-off> <swap> <monitor2-id-on-off>
 
-helpers.async({ awful.util.shell, "-c",
-                "xrandr | grep \" connected\" | sed -e \"s/\\([a-zA-Z0-9]\\+\\) connected.*/\\1/\""
-                --"ls"
-              }, function(s)
-      multimon.markup = print_monitors(s)
+function refresh_monitors()
+   helpers.async({ awful.util.shell, "-c",
+                   -- command below prints monitor-id:left-offset
+                   "xrandr | grep \" connected\" | sed -e \"s/\\([A-Za-z0-9]\\+\\) connected.*[0-9]\\+x[0-9]\\++\\([0-9]\\+\\).*/\\1:\\2/\""
+                 },
+      function(s)
+         multimon.markup = print_monitors(s)
 
-      naughty.notify({ preset = naughty.config.presets.critical,
-                       title = print_monitors(s),
-                       text = awesome.startup_errors })
-end)
+         naughty.notify({ preset = naughty.config.presets.critical,
+                          title = print_monitors(s),
+                          text = awesome.startup_errors })
+      end
+   )
+end
 
+refresh_monitors()
 
 awful.screen.connect_for_each_screen(function(s)
       -- Wallpaper
@@ -417,15 +450,14 @@ awful.screen.connect_for_each_screen(function(s)
             weather_caption,
             weather.icon,
             weather.widget,
-            mykeyboardlayout,
             volicon,
             cpu,
             cpu_graph_mirror,
             multimon,
             wibox.widget.systray(),
             mytextclock,
-            s.mylayoutbox,
-         },
+            s.mylayoutbox
+         }
       }
 end)
 -- }}}
@@ -554,7 +586,9 @@ globalkeys = awful.util.table.join(
           naughty.notify({ title = "UM",
                            icon = "/tmp/awesome-wm-weather-c2.png",
                            timeout = 0 })
-    end)
+    end),
+
+    awful.key({ modkey, }, "'", refresh_monitors)
 )
 
 clientkeys = awful.util.table.join(
