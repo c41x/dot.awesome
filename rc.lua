@@ -367,6 +367,10 @@ function split(inputstr, sep)
    return t
 end
 
+function fif(condition, if_true, if_false)
+  if condition then return if_true else return if_false end
+end
+
 function setup_monitors(lines)
    -- build monitors list
    local monitors = {}
@@ -383,39 +387,47 @@ function setup_monitors(lines)
    table.sort(monitors, cmp_monitors)
 
    -- setup on-off buttons
+   multimon[1].markup = " "
+   multimon[2].markup = ""
+   multimon[3].markup = " "
+
    if table.getn(monitors) > 0 then
       -- left monitor
-      multimon[1].markup = monitors[1][1]
+      multimon[1].markup = fif(monitors[1][2] == "99999", " <span color=\"#ff0000\">" .. monitors[1][1] .. "</span> ", " " .. monitors[1][1] .. " ")
       multimon[1]:connect_signal("button::press", function(w)
                                     if monitors[1][2] == "99999" then
                                        -- turn on
-                                       os.execute()
+                                       os.execute("xrandr --output " .. monitors[1][1] .. " --auto")
                                     else
                                        -- turn off
-                                       os.execute()
+                                       os.execute("xrandr --output " .. monitors[1][1] .. " --off")
                                     end
-                                    return true
+                                    refresh_monitors()
                                 end)
 
       -- swap button
       if table.getn(monitors) > 1 then
-         multimon[2].markup = " <> "
+         multimon[2].markup = "<> "
          multimon[2]:connect_signal("button::press", function(w)
                                        -- swap l-r
-                                       os.execute()
-                                       return true
+                                       os.execute("xrandr --output " .. monitors[1][1] .. " --auto --left-of " .. monitors[2][1].. " --auto")
+                                       refresh_monitors()
+                                   end)
+
+         -- right monitor
+         multimon[3].markup = fif(monitors[2][2] == "99999", "<span color=\"#ff0000\">" .. monitors[2][1] .. "</span> ", monitors[2][1] .. " ")
+         multimon[3]:connect_signal("button::press", function(w)
+                                       if monitors[2][2] == "99999" then
+                                          -- turn on
+                                          os.execute("xrandr --output " .. monitors[2][1] .. " --auto")
+                                       else
+                                          -- turn off
+                                          os.execute("xrandr --output " .. monitors[2][1] .. " --off")
+                                       end
+                                       refresh_monitors()
                                    end)
       end
-
-      -- right monitor
    end
-
-   -- local ret = ""
-   -- for i, m in ipairs(monitors) do
-   --    ret = ret .. m[1] .. " at: " .. m[2] .. " | "
-   -- end
-
-   return ret
 end
 
 -- monitors setup:
@@ -491,7 +503,9 @@ awful.screen.connect_for_each_screen(function(s)
             volicon,
             cpu,
             cpu_graph_mirror,
-            multimon,
+            multimon[1],
+            multimon[2],
+            multimon[3],
             wibox.widget.systray(),
             mytextclock,
             s.mylayoutbox
