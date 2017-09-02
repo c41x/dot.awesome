@@ -330,17 +330,26 @@ local tempGPU = lain.widget.temp({
 
 local helpers = require("lain.helpers")
 
-local multimon = wibox.widget {
-   markup = 'loading...',
-   align  = 'center',
-   valign = 'center',
-   widget = wibox.widget.textbox
+local multimon = {
+   wibox.widget {
+      markup = 'loading...',
+      align  = 'center',
+      valign = 'center',
+      widget = wibox.widget.textbox
+   },
+   wibox.widget {
+      markup = '',
+      align  = 'center',
+      valign = 'center',
+      widget = wibox.widget.textbox
+   },
+   wibox.widget {
+      markup = '',
+      align  = 'center',
+      valign = 'center',
+      widget = wibox.widget.textbox
+   }
 }
-
-multimon:connect_signal("button::press", function(w)
-                           multimon.markup = "asd"
-                           return true
-end)
 
 function cmp_monitors(a, b)
    return a[2] < b[2]
@@ -358,20 +367,53 @@ function split(inputstr, sep)
    return t
 end
 
-function print_monitors(lines)
+function setup_monitors(lines)
    -- build monitors list
    local monitors = {}
-   for i in string.gmatch(lines, "%S+") do
-      table.insert(monitors, split(i, ":"))
+   for i in string.gmatch(lines, "[^\r\n]+") do
+      if string.find(i, ":") then
+         table.insert(monitors, split(i, ":"))
+      else
+         local s = split(i, " ")
+         table.insert(monitors, {s[1], "99999"})
+      end
    end
 
    -- sort monitors from left to right
    table.sort(monitors, cmp_monitors)
 
-   local ret = ""
-   for i, m in ipairs(monitors) do
-      ret = ret .. m[1] .. " at: " .. m[2] .. " | "
+   -- setup on-off buttons
+   if table.getn(monitors) > 0 then
+      -- left monitor
+      multimon[1].markup = monitors[1][1]
+      multimon[1]:connect_signal("button::press", function(w)
+                                    if monitors[1][2] == "99999" then
+                                       -- turn on
+                                       os.execute()
+                                    else
+                                       -- turn off
+                                       os.execute()
+                                    end
+                                    return true
+                                end)
+
+      -- swap button
+      if table.getn(monitors) > 1 then
+         multimon[2].markup = " <> "
+         multimon[2]:connect_signal("button::press", function(w)
+                                       -- swap l-r
+                                       os.execute()
+                                       return true
+                                   end)
+      end
+
+      -- right monitor
    end
+
+   -- local ret = ""
+   -- for i, m in ipairs(monitors) do
+   --    ret = ret .. m[1] .. " at: " .. m[2] .. " | "
+   -- end
 
    return ret
 end
@@ -385,11 +427,7 @@ function refresh_monitors()
                    "xrandr | grep \" connected\" | sed -e \"s/\\([A-Za-z0-9]\\+\\) connected.*[0-9]\\+x[0-9]\\++\\([0-9]\\+\\).*/\\1:\\2/\""
                  },
       function(s)
-         multimon.markup = print_monitors(s)
-
-         naughty.notify({ preset = naughty.config.presets.critical,
-                          title = print_monitors(s),
-                          text = awesome.startup_errors })
+         setup_monitors(s)
       end
    )
 end
