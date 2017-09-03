@@ -1,3 +1,9 @@
+-- TODO: spawn htop on cpu (quake)
+-- TODO: net mon
+-- TODO: correct date format
+-- TODO: free space
+-- TODO: code tag always tiled
+
 -- Standard awesome library
 local gears = require("gears")
 local awful = require("awful")
@@ -332,119 +338,50 @@ local helpers = require("lain.helpers")
 
 local multimon = {
    wibox.widget {
-      markup = 'loading...',
+      markup = ' [main] ',
       align  = 'center',
       valign = 'center',
       widget = wibox.widget.textbox
    },
    wibox.widget {
-      markup = '',
+      markup = '[both] ',
       align  = 'center',
       valign = 'center',
       widget = wibox.widget.textbox
    },
    wibox.widget {
-      markup = '',
+      markup = '[secondary] ',
       align  = 'center',
       valign = 'center',
       widget = wibox.widget.textbox
    }
 }
 
-function cmp_monitors(a, b)
-   return a[2] < b[2]
-end
+multimon[1]:connect_signal("button::press", function(w)
+                              os.execute("xrandr --output DVI-D-0 --auto --output HDMI-A-0 --off")
+                          end)
 
-function split(inputstr, sep)
-   if sep == nil then
-      sep = "%s"
-   end
-   local t={} ; i=1
-   for str in string.gmatch(inputstr, "([^"..sep.."]+)") do
-      t[i] = str
-      i = i + 1
-   end
-   return t
-end
+multimon[2]:connect_signal("button::press", function(w)
+                              os.execute("xrandr --output HDMI-A-0 --auto && xrandr --output DVI-D-0 --auto --left-of HDMI-A-0")
+                          end)
 
-function fif(condition, if_true, if_false)
-  if condition then return if_true else return if_false end
-end
+multimon[3]:connect_signal("button::press", function(w)
+                              os.execute("xrandr --output HDMI-A-0 --auto --output DVI-D-0 --off")
+                          end)
 
-function setup_monitors(lines)
-   -- build monitors list
-   local monitors = {}
-   for i in string.gmatch(lines, "[^\r\n]+") do
-      if string.find(i, ":") then
-         table.insert(monitors, split(i, ":"))
-      else
-         local s = split(i, " ")
-         table.insert(monitors, {s[1], "99999"})
-      end
-   end
+-- disk monitor
+local dskmon = lain.widget.fs {
+    settings = function()
+       widget:set_markup(" [hdd: " .. fs_now.used_gb .. " / " .. fs_now.size_gb .. "] ")
+    end
+}
 
-   -- sort monitors from left to right
-   table.sort(monitors, cmp_monitors)
-
-   -- setup on-off buttons
-   multimon[1].markup = " "
-   multimon[2].markup = ""
-   multimon[3].markup = " "
-
-   if table.getn(monitors) > 0 then
-      -- left monitor
-      multimon[1].markup = fif(monitors[1][2] == "99999", " <span color=\"#ff0000\">" .. monitors[1][1] .. "</span> ", " " .. monitors[1][1] .. " ")
-      multimon[1]:connect_signal("button::press", function(w)
-                                    if monitors[1][2] == "99999" then
-                                       -- turn on
-                                       os.execute("xrandr --output " .. monitors[1][1] .. " --auto")
-                                    else
-                                       -- turn off
-                                       os.execute("xrandr --output " .. monitors[1][1] .. " --off")
-                                    end
-                                    refresh_monitors()
-                                end)
-
-      -- swap button
-      if table.getn(monitors) > 1 then
-         multimon[2].markup = "<> "
-         multimon[2]:connect_signal("button::press", function(w)
-                                       -- swap l-r
-                                       os.execute("xrandr --output " .. monitors[1][1] .. " --auto --left-of " .. monitors[2][1].. " --auto")
-                                       refresh_monitors()
-                                   end)
-
-         -- right monitor
-         multimon[3].markup = fif(monitors[2][2] == "99999", "<span color=\"#ff0000\">" .. monitors[2][1] .. "</span> ", monitors[2][1] .. " ")
-         multimon[3]:connect_signal("button::press", function(w)
-                                       if monitors[2][2] == "99999" then
-                                          -- turn on
-                                          os.execute("xrandr --output " .. monitors[2][1] .. " --auto")
-                                       else
-                                          -- turn off
-                                          os.execute("xrandr --output " .. monitors[2][1] .. " --off")
-                                       end
-                                       refresh_monitors()
-                                   end)
-      end
-   end
-end
-
--- monitors setup:
--- detect monitors and print eg.: <monitor1-id-on-off> <swap> <monitor2-id-on-off>
-
-function refresh_monitors()
-   helpers.async({ awful.util.shell, "-c",
-                   -- command below prints monitor-id:left-offset
-                   "xrandr | grep \" connected\" | sed -e \"s/\\([A-Za-z0-9]\\+\\) connected.*[0-9]\\+x[0-9]\\++\\([0-9]\\+\\).*/\\1:\\2/\""
-                 },
-      function(s)
-         setup_monitors(s)
-      end
-   )
-end
-
-refresh_monitors()
+-- memory monitor
+local memmon = lain.widget.mem {
+    settings = function()
+       widget:set_markup(" [ram: " .. mem_now.used .. "MB " .. mem_now.perc .. "%] ")
+    end
+}
 
 awful.screen.connect_for_each_screen(function(s)
       -- Wallpaper
@@ -497,12 +434,14 @@ awful.screen.connect_for_each_screen(function(s)
             layout = wibox.layout.fixed.horizontal,
             tempGPU,
             temp,
+            --dskmon,
+            memmon,
+            cpu,
+            cpu_graph_mirror,
             weather_caption,
             weather.icon,
             weather.widget,
             volicon,
-            cpu,
-            cpu_graph_mirror,
             multimon[1],
             multimon[2],
             multimon[3],
@@ -638,9 +577,7 @@ globalkeys = awful.util.table.join(
           naughty.notify({ title = "UM",
                            icon = "/tmp/awesome-wm-weather-c2.png",
                            timeout = 0 })
-    end),
-
-    awful.key({ modkey, }, "'", refresh_monitors)
+    end)
 )
 
 clientkeys = awful.util.table.join(
