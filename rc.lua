@@ -383,6 +383,25 @@ local memmon = lain.widget.mem {
     end
 }
 
+-- network monitor
+local net_graph = wibox.widget {
+   min_value = 0,
+   max_value = 15360,
+   border_color = '#222222',
+   background_color = '#222222',
+   color = "#ff8833",
+   widget = wibox.widget.graph
+}
+
+local net_graph_mirror = wibox.container.mirror(net_graph, {horizontal = true})
+
+local net = lain.widget.net {
+   settings = function()
+      widget:set_markup(" <span color='#ff8833'>net </span>")
+      net_graph:add_value(net_now.received)
+   end
+}
+
 awful.screen.connect_for_each_screen(function(s)
       -- Wallpaper
       set_wallpaper(s)
@@ -436,6 +455,8 @@ awful.screen.connect_for_each_screen(function(s)
             temp,
             --dskmon,
             memmon,
+            net,
+            net_graph_mirror,
             cpu,
             cpu_graph_mirror,
             weather_caption,
