@@ -344,13 +344,13 @@ local multimon = {
       widget = wibox.widget.textbox
    },
    wibox.widget {
-      markup = '[both] ',
+      markup = '[=] ',
       align  = 'center',
       valign = 'center',
       widget = wibox.widget.textbox
    },
    wibox.widget {
-      markup = '[secondary] ',
+      markup = '[2nd] ',
       align  = 'center',
       valign = 'center',
       widget = wibox.widget.textbox
@@ -358,15 +358,15 @@ local multimon = {
 }
 
 multimon[1]:connect_signal("button::press", function(w)
-                              os.execute("xrandr --output DVI-D-0 --auto --output HDMI-A-0 --off")
+                              os.execute("xrandr --output DisplayPort-0 --auto --output HDMI-A-0 --off")
                           end)
 
 multimon[2]:connect_signal("button::press", function(w)
-                              os.execute("xrandr --output HDMI-A-0 --auto && xrandr --output DVI-D-0 --auto --left-of HDMI-A-0")
+                              os.execute("xrandr --output HDMI-A-0 --auto && xrandr --output DisplayPort-0 --auto --left-of HDMI-A-0")
                           end)
 
 multimon[3]:connect_signal("button::press", function(w)
-                              os.execute("xrandr --output HDMI-A-0 --auto --output DVI-D-0 --off")
+                              os.execute("xrandr --output HDMI-A-0 --auto --output DisplayPort-0 --off")
                           end)
 
 -- disk monitor
@@ -418,7 +418,7 @@ awful.screen.connect_for_each_screen(function(s)
       })
 
       -- Each screen has its own tag table.
-      awful.tag({ "general", "code", "music", "games", "aux 1", "aux 2", "aux 3" }, s, awful.layout.layouts[1])
+      awful.tag({ "general", "code", "code 2", "aux 1", "aux 2", "aux 3" }, s, awful.layout.layouts[1])
 
       -- Create a promptbox for each screen
       s.mypromptbox = awful.widget.prompt()
