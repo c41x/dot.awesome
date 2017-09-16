@@ -354,6 +354,12 @@ local multimon = {
       align  = 'center',
       valign = 'center',
       widget = wibox.widget.textbox
+   },
+   wibox.widget {
+      markup = '[pwr] ',
+      align  = 'center',
+      valign = 'center',
+      widget = wibox.widget.textbox
    }
 }
 
@@ -367,6 +373,10 @@ multimon[2]:connect_signal("button::press", function(w)
 
 multimon[3]:connect_signal("button::press", function(w)
                               os.execute("xrandr --output HDMI-A-0 --auto --output DisplayPort-0 --off")
+                          end)
+
+multimon[4]:connect_signal("button::press", function(w)
+                              os.execute("xset s off && xset s noblank && xset -dpms")
                           end)
 
 -- disk monitor
