@@ -18,8 +18,9 @@ local menubar = require("menubar")
 local hotkeys_popup = require("awful.hotkeys_popup").widget
 local lain = require("lain")
 
--- set pcmanfm file manager as default
-os.execute("xdg-mime default pcmanfm.desktop inode/directory")
+-- set default programs
+os.execute("xdg-mime default pcmanfm.desktop inode/directory") -- pcmanfm as file manager
+os.execute("xdg-mime default mupdf.desktop application/x-pdf") -- mupdf as pdf reader
 
 -- Load Debian menu entries
 require("debian.menu")
@@ -476,6 +477,7 @@ awful.screen.connect_for_each_screen(function(s)
             multimon[1],
             multimon[2],
             multimon[3],
+            multimon[4],
             wibox.widget.systray(),
             mytextclock,
             s.mylayoutbox
@@ -823,3 +825,6 @@ end)
 client.connect_signal("focus", function(c) c.border_color = beautiful.border_focus end)
 client.connect_signal("unfocus", function(c) c.border_color = beautiful.border_normal end)
 -- }}}
+
+-- Autorun programs
+awful.util.spawn("xpad")
