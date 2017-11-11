@@ -4,7 +4,7 @@
 
 local theme = {}
 
-theme.font          = "Liberation Mono 8"
+theme.font          = "Ubuntu Condensed 9"
 
 theme.bg_normal     = "#222222"
 theme.bg_focus      = "#225599"
