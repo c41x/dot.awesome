@@ -4,7 +4,8 @@
 
 local theme = {}
 
-theme.font          = "Ubuntu Condensed 9"
+-- install: sudo apt install xfonts-terminus
+theme.font          = "Terminus Regular 9"
 
 theme.bg_normal     = "#222222"
 theme.bg_focus      = "#225599"
