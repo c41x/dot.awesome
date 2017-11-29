@@ -323,7 +323,7 @@ local temp = lain.widget.temp({
       timeout = 10,
       tempfile = get_monitor("k10temp"),
       settings = function()
-         widget:set_markup('<span color="#88ff33"> cpu: ' .. coretemp_now .. '°C </span>')
+         widget:set_markup('<span color="#3388ff"> ' .. coretemp_now .. '°C </span>')
       end
 })
 
@@ -331,7 +331,7 @@ local tempGPU = lain.widget.temp({
       timeout = 10,
       tempfile = get_monitor("amdgpu"),
       settings = function()
-         widget:set_markup('<span color="#ff8833"> gpu: ' .. coretemp_now .. '°C </span>')
+         widget:set_markup('<span color="#ff3311"> ' .. coretemp_now .. '°C </span>')
       end
 })
 
@@ -339,7 +339,7 @@ local helpers = require("lain.helpers")
 
 local multimon = {
    wibox.widget {
-      markup = ' [main] ',
+      markup = ' [.] ',
       align  = 'center',
       valign = 'center',
       widget = wibox.widget.textbox
@@ -351,7 +351,7 @@ local multimon = {
       widget = wibox.widget.textbox
    },
    wibox.widget {
-      markup = '[2nd] ',
+      markup = '[tv] ',
       align  = 'center',
       valign = 'center',
       widget = wibox.widget.textbox
@@ -390,7 +390,7 @@ local dskmon = lain.widget.fs {
 -- memory monitor
 local memmon = lain.widget.mem {
     settings = function()
-       widget:set_markup(" [ram: " .. mem_now.used .. "MB " .. mem_now.perc .. "%] ")
+       widget:set_markup(" <span color='#77ff55'>ram: " .. mem_now.used .. "MB " .. mem_now.perc .. "%</span> ")
     end
 }
 
@@ -400,7 +400,7 @@ local net_graph = wibox.widget {
    max_value = 15360,
    border_color = '#222222',
    background_color = '#222222',
-   color = "#ff8833",
+   color = "#ffee66",
    widget = wibox.widget.graph
 }
 
@@ -408,7 +408,7 @@ local net_graph_mirror = wibox.container.mirror(net_graph, {horizontal = true})
 
 local net = lain.widget.net {
    settings = function()
-      widget:set_markup(" <span color='#ff8833'>net </span>")
+      widget:set_markup(" <span color='#ffee66'>net </span>")
       net_graph:add_value(net_now.received)
    end
 }
@@ -462,14 +462,14 @@ awful.screen.connect_for_each_screen(function(s)
          s.mytasklist, -- Middle widget
          { -- Right widgets
             layout = wibox.layout.fixed.horizontal,
-            tempGPU,
-            temp,
             --dskmon,
-            memmon,
             net,
             net_graph_mirror,
             cpu,
             cpu_graph_mirror,
+            temp,
+            tempGPU,
+            memmon,
             weather_caption,
             weather.icon,
             weather.widget,
