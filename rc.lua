@@ -390,7 +390,7 @@ local dskmon = lain.widget.fs {
 -- memory monitor
 local memmon = lain.widget.mem {
     settings = function()
-       widget:set_markup(" <span color='#77ff55'>ram: " .. mem_now.used .. "MB " .. mem_now.perc .. "%</span> ")
+       widget:set_markup(" <span color='#77ff55'> " .. mem_now.used .. "MB " .. mem_now.perc .. "%</span> ")
     end
 }
 
@@ -409,7 +409,7 @@ local net_graph_mirror = wibox.container.mirror(net_graph, {horizontal = true})
 local net = lain.widget.net {
    settings = function()
       widget:set_markup(" <span color='#ffee66'>net </span>")
-      net_graph:add_value(net_now.received)
+      net_graph:add_value(tonumber(net_now.received))
    end
 }
 
