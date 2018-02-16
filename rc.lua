@@ -1,5 +1,4 @@
 -- TODO: spawn htop on cpu (quake)
--- TODO: net mon
 -- TODO: correct date format
 -- TODO: free space
 -- TODO: code tag always tiled
@@ -365,7 +364,7 @@ local multimon = {
 }
 
 multimon[1]:connect_signal("button::press", function(w)
-                              os.execute("xrandr --output DisplayPort-0 --auto --output HDMI-A-0 --off")
+                              os.execute("xrandr --output DisplayPort-0 --primary --mode 1920x1200 --pos 0x960 --rotate normal --output DVI-D-0 --mode 1920x1080 --pos 1920x240 --rotate left --output DVI-D-1 --off --output HDMI-A-0 --off")
                           end)
 
 multimon[2]:connect_signal("button::press", function(w)
@@ -373,7 +372,7 @@ multimon[2]:connect_signal("button::press", function(w)
                           end)
 
 multimon[3]:connect_signal("button::press", function(w)
-                              os.execute("xrandr --output HDMI-A-0 --auto --output DisplayPort-0 --off")
+                              os.execute("xrandr --output DisplayPort-0 --primary --mode 1920x1200 --pos 0x960 --rotate normal --output DVI-D-0 --mode 1920x1080 --pos 1920x240 --rotate left --output DVI-D-1 --off --output HDMI-A-0 --mode 4096x2160 --pos 3000x0 --rotate normal")
                           end)
 
 multimon[4]:connect_signal("button::press", function(w)
@@ -474,7 +473,7 @@ awful.screen.connect_for_each_screen(function(s)
             weather.icon,
             weather.widget,
             volicon,
-            multimon[1],
+            --multimon[1],
             multimon[2],
             multimon[3],
             multimon[4],
